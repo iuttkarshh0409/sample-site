@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Gate - Secure Unified Authentication</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="A seamless, passwordless, unified authentication experience. Simply enter your email to log in or sign up instantly.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Decorative background elements for premium feel -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <main class="auth-container">
+    <div class="auth-card" id="auth-card">
+      <div class="auth-header">
+        <div class="logo-container">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#8a2be2"/>
+                <stop offset="100%" stop-color="#00ffff"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h1 class="auth-title">Aether Authentication</h1>
+        <p class="auth-subtitle">Enter your email to access your account</p>
+      </div>
+
+      <!-- Initial Auth Flow Screen -->
+      <div id="login-flow-screen" class="flow-screen">
+        <form id="auth-form" novalidate>
+          <div class="input-wrapper">
+            <div class="input-icon-container">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <input 
+              type="email" 
+              id="email-input" 
+              placeholder="name@domain.com" 
+              autocomplete="email" 
+              required
+            >
+            <label for="email-input" class="floating-label">Email Address</label>
+          </div>
+
+          <button type="submit" id="login-btn" class="submit-btn">
+            <span class="btn-text">Login</span>
+            <span class="btn-loader hidden">
+              <svg class="spinner" viewBox="0 0 50 50">
+                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+              </svg>
+            </span>
+          </button>
+        </form>
+
+        <div id="status-message" class="status-message hidden" role="alert"></div>
+      </div>
+
+      <!-- Logged-in State Screen -->
+      <div id="success-flow-screen" class="flow-screen hidden">
+        <div class="success-icon-wrapper">
+          <svg class="success-checkmark" viewBox="0 0 52 52">
+            <circle class="success-checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+            <path class="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          </svg>
+        </div>
+
+        <div class="user-details-card">
+          <div class="badge-row">
+            <span id="user-status-badge" class="badge">New User</span>
+          </div>
+          <p class="welcome-text">Successfully Authenticated</p>
+          
+          <div class="detail-group">
+            <label class="detail-label">Email</label>
+            <div id="user-email-display" class="detail-value">user@example.com</div>
+          </div>
+          
+          <div class="detail-group">
+            <label class="detail-label">User ID</label>
+            <div id="user-id-display" class="detail-value">#1029</div>
+          </div>
+
+          <div class="detail-group">
+            <label class="detail-label">Joined On</label>
+            <div id="user-date-display" class="detail-value">August 11, 2026</div>
+          </div>
+        </div>
+
+        <button id="reset-btn" class="reset-btn">Test Another Email</button>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
