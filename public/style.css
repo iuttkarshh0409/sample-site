@@ -524,3 +524,24 @@ body {
 .reset-btn:active {
   transform: translateY(1px);
 }
+
+/* User Management CRUD Link styling */
+.admin-link-container {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.admin-link {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition-fast);
+  opacity: 0.7;
+}
+
+.admin-link:hover {
+  color: hsl(190, 95%, 50%); /* Neon cyan hover color */
+  opacity: 1;
+  text-decoration: underline;
+}
+

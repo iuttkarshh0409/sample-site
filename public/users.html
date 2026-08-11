@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Auth - User Management (CRUD)</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Styling unified with main login page but optimized for a minimal database dashboard */
+    :root {
+      --font-family: 'Outfit', sans-serif;
+      --bg-color: #0A0D1A;
+      --card-bg: rgba(22, 27, 51, 0.45);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f1f3f9;
+      --text-secondary: #a9b2c8;
+      --text-muted: #64748b;
+      --primary: #8a2be2;
+      --primary-hover: #9d3bf5;
+      --success: #10b981;
+      --error: #ef4444;
+      --info: #0ea5e9;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    /* Heading styling */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #ffffff 40%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .back-link {
+      font-size: 0.9rem;
+      color: var(--info);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+      opacity: 0.8;
+    }
+
+    /* Status messages toast-like block */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+      display: none;
+    }
+    .alert.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--success);
+    }
+    .alert.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--error);
+    }
+
+    /* Layout division */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    @media (min-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 350px 1fr;
+      }
+    }
+
+    /* Card Panels */
+    .panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      height: fit-content;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 18px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding-bottom: 8px;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(10, 13, 26, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: #fff;
+      font-family: var(--font-family);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font-family);
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.03);
+      color: #fff;
+    }
+
+    /* User Detail Panel */
+    .detail-view {
+      margin-top: 20px;
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      display: none;
+    }
+    .detail-view.active {
+      display: block;
+    }
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .detail-header h3 {
+      font-size: 0.95rem;
+      color: var(--info);
+    }
+    .detail-close {
+      cursor: pointer;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+    }
+    .detail-row {
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+    }
+    .detail-row span {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .detail-row code {
+      background: #05070f;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    /* Users List Table */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .badge-id {
+      background: rgba(255,255,255,0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+
+    /* Table Actions */
+    .action-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: var(--font-family);
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .action-btn:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+
+    .action-view { color: var(--info); }
+    .action-edit { color: var(--warning); }
+    .action-delete { color: var(--error); }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>User Management</h1>
+      <a href="/login" class="back-link">← Go to Login Page</a>
+    </div>
+
+    <!-- Alert Box -->
+    <div id="alert-box" class="alert"></div>
+
+    <div class="dashboard-grid">
+      <!-- CRUD Form Panel -->
+      <div>
+        <div class="panel">
+          <h2 id="form-panel-title" class="panel-title">Create User</h2>
+          <form id="crud-form">
+            <input type="hidden" id="edit-user-id" value="">
+            
+            <div class="form-group">
+              <label for="user-email">Email Address</label>
+              <input 
+                type="email" 
+                id="user-email" 
+                class="form-control" 
+                placeholder="name@domain.com" 
+                required
+              >
+            </div>
+
+            <div class="btn-group">
+              <button type="submit" id="submit-btn" class="btn btn-primary">Create User</button>
+              <button type="button" id="cancel-btn" class="btn btn-secondary" style="display: none;">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Detail View Box -->
+        <div id="detail-view" class="detail-view">
+          <div class="detail-header">
+            <h3>User Details</h3>
+            <button class="detail-close" onclick="closeDetails()">×</button>
+          </div>
+          <div class="detail-row"><span>ID:</span> <code id="detail-id">-</code></div>
+          <div class="detail-row"><span>Email:</span> <code id="detail-email">-</code></div>
+          <div class="detail-row"><span>Created At:</span> <span id="detail-created">-</span></div>
+        </div>
+      </div>
+
+      <!-- Users Table Panel -->
+      <div class="panel">
+        <h2 class="panel-title">Users Directory</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Email</th>
+                <th style="width: 180px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <!-- Dynamically populated rows -->
+              <tr>
+                <td colspan="3" class="empty-state">Loading users directory...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const crudForm = document.getElementById('crud-form');
+      const emailInput = document.getElementById('user-email');
+      const editIdInput = document.getElementById('edit-user-id');
+      const submitBtn = document.getElementById('submit-btn');
+      const cancelBtn = document.getElementById('cancel-btn');
+      const formPanelTitle = document.getElementById('form-panel-title');
+      const usersTableBody = document.getElementById('users-table-body');
+      const alertBox = document.getElementById('alert-box');
+
+      // Detail view components
+      const detailView = document.getElementById('detail-view');
+      const detailId = document.getElementById('detail-id');
+      const detailEmail = document.getElementById('detail-email');
+      const detailCreated = document.getElementById('detail-created');
+
+      let allUsers = [];
+
+      // Load all users initially
+      loadUsers();
+
+      // Form Submit Handler (Unified Create/Update)
+      crudForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = emailInput.value.trim();
+        const editId = editIdInput.value;
+
+        if (!email) return;
+
+        const isEditing = !!editId;
+        const url = isEditing ? `/api/users/${editId}` : '/api/users';
+        const method = isEditing ? 'PUT' : 'POST';
+
+        try {
+          const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+
+          const result = await res.json();
+
+          if (!res.ok) {
+            throw new Error(result.message || 'Operation failed');
+          }
+
+          showAlert(result.message, 'success');
+          resetForm();
+          loadUsers();
+        } catch (err) {
+          showAlert(err.message, 'error');
+        }
+      });
+
+      // Cancel button action
+      cancelBtn.addEventListener('click', resetForm);
+
+      // Load Users Directory from API
+      async function loadUsers() {
+        try {
+          const res = await fetch('/api/users');
+          const result = await res.json();
+
+          if (!res.ok) throw new Error(result.message || 'Failed to load directory');
+
+          allUsers = result.data || [];
+          renderUsersTable(allUsers);
+        } catch (err) {
+          usersTableBody.innerHTML = `<tr><td colspan="3" class="empty-state">${err.message}</td></tr>`;
+        }
+      }
+
+      // Render Users into Table
+      function renderUsersTable(users) {
+        if (users.length === 0) {
+          usersTableBody.innerHTML = `<tr><td colspan="3" class="empty-state">No users found in database.</td></tr>`;
+          return;
+        }
+
+        usersTableBody.innerHTML = users.map(user => `
+          <tr>
+            <td><span class="badge-id">#${user.id}</span></td>
+            <td style="word-break: break-all;">${escapeHTML(user.email)}</td>
+            <td>
+              <div class="action-links">
+                <button class="action-btn action-view" onclick="viewUser(${user.id})">View</button>
+                <button class="action-btn action-edit" onclick="startEditUser(${user.id})">Edit</button>
+                <button class="action-btn action-delete" onclick="deleteUser(${user.id})">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Global scoped callbacks for actions
+      window.viewUser = async (id) => {
+        try {
+          const res = await fetch(`/api/users/${id}`);
+          const result = await res.json();
+
+          if (!res.ok) throw new Error(result.message);
+
+          const user = result.data;
+          detailId.textContent = `#${user.id}`;
+          detailEmail.textContent = user.email;
+          detailCreated.textContent = formatDate(user.created_at);
+          detailView.classList.add('active');
+        } catch (err) {
+          showAlert(err.message, 'error');
+        }
+      };
+
+      window.startEditUser = (id) => {
+        const user = allUsers.find(u => u.id === id);
+        if (!user) return;
+
+        editIdInput.value = user.id;
+        emailInput.value = user.email;
+        formPanelTitle.textContent = `Edit User #${user.id}`;
+        submitBtn.textContent = 'Update User';
+        cancelBtn.style.display = 'inline-block';
+        emailInput.focus();
+      };
+
+      window.deleteUser = async (id) => {
+        if (!confirm(`Are you sure you want to delete User #${id}?`)) return;
+
+        try {
+          const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+          const result = await res.json();
+
+          if (!res.ok) throw new Error(result.message);
+
+          showAlert(result.message, 'success');
+          
+          // If we are currently editing the deleted user, reset form
+          if (editIdInput.value == id) resetForm();
+          // If we are viewing the deleted user, close details
+          if (detailId.textContent === `#${id}`) closeDetails();
+
+          loadUsers();
+        } catch (err) {
+          showAlert(err.message, 'error');
+        }
+      };
+
+      window.closeDetails = () => {
+        detailView.classList.remove('active');
+      };
+
+      // Reset editing/creation form
+      function resetForm() {
+        editIdInput.value = '';
+        emailInput.value = '';
+        formPanelTitle.textContent = 'Create User';
+        submitBtn.textContent = 'Create User';
+        cancelBtn.style.display = 'none';
+      }
+
+      // Show temporary alert messages
+      function showAlert(msg, type) {
+        alertBox.textContent = msg;
+        alertBox.className = `alert ${type}`;
+        
+        // Scroll to top of table to see alert if needed
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Auto hide alert after 4 seconds
+        clearTimeout(alertBox.timeoutId);
+        alertBox.timeoutId = setTimeout(() => {
+          alertBox.style.display = 'none';
+        }, 4000);
+      }
+
+      // Utilities
+      function escapeHTML(str) {
+        return str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function formatDate(isoString) {
+        try {
+          const date = new Date(isoString);
+          return date.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        } catch {
+          return isoString;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

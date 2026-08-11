@@ -1,62 +1,66 @@
 # Unified Email-Based Authentication System
 
-A minimal, secure, and modern passwordless authentication flow where **login and signup are unified into a single email-only action**.
+A modular, secure, and modern passwordless authentication flow where **login and signup are unified into a single email-only action**. All SQLite CRUD operations are decoupled from the routing logic and managed via a dedicated database service layer.
 
-## Architecture & Flow
+## Architecture & Flows
 
-Instead of separating Login and Signup views:
-1. The user enters their email and clicks **Login**.
-2. The system checks if the email exists in the SQLite database.
-3. **If it exists:** Logs the user in directly (existing user authentication).
-4. **If it does not exist:** Automatically creates a new user profile in the database and logs them in.
-
-This setup prevents unnecessary onboarding friction and avoids complex password management.
+The project enforces a strict separation of concerns, keeping routers, services, and the database driver isolated:
 
 ```
-       User enters email
-               ↓
-          Click Login
-               ↓
-         Validate email
-               ↓
-      Send email to backend
-               ↓
-     Check SQLite database
-               ↓
-         ┌───────────────┐
-         │ Email exists? │
-         └───────┬───────┘
-             Yes │ No
-                 │
-          ┌──────┴──────┐
-          ↓             ↓
-        Login        Create user
-          ↓             ↓
-          └──────┬──────┘
-                 ↓
-            Authenticate
-                 ↓
-         Show logged-in state
+    [ Frontend UI ]
+    (/login, /users)
+           ↓
+    [ REST API Routes ]
+  (routes/auth, routes/users)
+           ↓
+   [ UserService Layer ]
+  (services/userService.js)
+           ↓
+  [ SQLite Database Driver ]
+    (database/database.js)
 ```
 
-## Tech Stack
-- **Frontend:** HTML5, CSS3 (Modern Glassmorphic styling), Vanilla JavaScript
-- **Backend:** Node.js + Express
-- **Database:** SQLite3
+### 🔐 Unified Authentication Flow
+1. The user enters their email at `/login` and submits the form.
+2. The client submits a `POST /api/auth/login` request.
+3. The auth router queries the `userService` to check if the user exists.
+4. **If they exist:** Authenticates the user and returns their profile.
+5. **If they do not exist:** Automatically creates their record in SQLite and returns the newly registered profile.
+
+### 👥 User CRUD Flow
+1. Navigate to `/users` (User Management page).
+2. The page loads all users from `GET /api/users` and renders them in a list.
+3. Forms and actions allow you to:
+   - **Create:** `POST /api/users`
+   - **View:** `GET /api/users/:id`
+   - **Update:** `PUT /api/users/:id`
+   - **Delete:** `DELETE /api/users/:id`
+
+---
 
 ## Directory Structure
+
 ```
 project/
 ├── public/
-│   ├── index.html     # Client interface & templates
-│   ├── style.css      # Rich glassmorphic aesthetic styles
-│   └── script.js      # Client authentication handler & view router
+│   ├── index.html       # Email-only authentication page
+│   ├── style.css        # Premium glassmorphic styling
+│   ├── script.js        # Authentication script (Fetch API handler)
+│   └── users.html       # Minimal User Management (CRUD) dashboard
+├── routes/
+│   ├── auth.js          # Authentication router (/api/auth)
+│   └── users.js         # User CRUD router (/api/users)
+├── services/
+│   └── userService.js   # Database interface layer (CRUD service)
 ├── database/
-│   └── database.sqlite # SQLite Database file (auto-generated)
-├── server.js          # Express app server, DB schema, & auth routing
-├── package.json       # App metadata & dependencies
-└── README.md          # Documentation & verification guide
+│   ├── database.js      # SQLite connection & table initialization
+│   └── database.sqlite  # SQLite Database file (auto-generated)
+├── server.js            # Express server initialization & page routing
+├── package.json         # Dependencies & dev scripts
+└── README.md            # Project guide
 ```
+
+---
 
 ## Installation & Running
 
@@ -69,19 +73,28 @@ project/
    ```bash
    npm start
    ```
-   Or start in watch/development mode:
+   Or start in hot-reload watch/development mode:
    ```bash
    npm run dev
    ```
 
-3. **Access the Page:**
-   Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
+3. **Access the Interfaces:**
+   - **Authentication Gate:** [http://localhost:3000/login](http://localhost:3000/login)
+   - **User CRUD Dashboard:** [http://localhost:3000/users](http://localhost:3000/users)
 
-## Verification Checklist
+---
 
-Follow these steps to verify the system works correctly:
-1. **Invalid Input Rejection:** Enter an invalid email (e.g. `test@invalid`, or blank text) and verify that the client-side/server-side validations reject it and display an error.
-2. **New User Registration:** Enter an email that is not in the database (e.g., `newuser@example.com`). Click **Login**. Verify it says **"New User Created"** and shows their generated User ID.
-3. **Database Insertion Verification:** Verify that the database file `database/database.sqlite` has been successfully created.
-4. **Existing User Sign In:** Enter the same email address (`newuser@example.com`) again. Verify that it says **"Existing User"** and loads the user ID that matches the database entry from Step 2, without creating duplicates.
-5. **No Password/Signup Link Present:** Ensure there are no links to alternative signups or passwords to preserve the strict unified authentication constraint.
+## Verification & API Checklist
+
+### 1. Unified Authentication (`/login`)
+- Navigate to `/login`.
+- Input a new email address (e.g. `user_new@example.com`). Verify that a `201` response is returned and a **"New User Created"** badge is displayed.
+- Click **"Test Another Email"** and re-enter the same email. Verify that a `200` response is returned and the **"Existing User"** badge is displayed with matching database details.
+- Input an invalid string (e.g., `invalid-email`). Verify that validation flags the format and rejects it.
+
+### 2. User CRUD Dashboard (`/users`)
+- Navigate to `/users`.
+- **Create**: Input an email and click **Create User**. Verify the user row appends to the table.
+- **View**: Click **View** on a user. Verify their details (ID, Email, Joined Date) display in the Details panel.
+- **Edit**: Click **Edit** on a user. The form field should fill. Change the value, click **Update User**, and check if the table updates immediately.
+- **Delete**: Click **Delete** on a user and confirm. Verify the row is removed.
