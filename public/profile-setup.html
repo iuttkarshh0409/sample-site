@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Auth - Profile Onboarding</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Premium visual identity synced with index.html */
+    :root {
+      --font-family: 'Outfit', sans-serif;
+      --bg-color: hsl(230, 40%, 6%);
+      --card-bg: hsla(230, 35%, 12%, 0.45);
+      --card-border: hsla(230, 30%, 90%, 0.08);
+      --text-primary: hsl(210, 40%, 96%);
+      --text-secondary: hsl(215, 20%, 68%);
+      --text-muted: hsl(215, 15%, 45%);
+      --primary-glow: linear-gradient(135deg, hsl(270, 80%, 55%) 0%, hsl(190, 95%, 50%) 100%);
+      --primary-hover: linear-gradient(135deg, hsl(270, 85%, 60%) 0%, hsl(190, 100%, 55%) 100%);
+      --color-success: hsl(145, 80%, 45%);
+      --color-error: hsl(355, 85%, 60%);
+      --color-info: hsl(200, 85%, 50%);
+      --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* Floating glows */
+    .bg-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(140px);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.4;
+    }
+    .bg-glow-1 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, hsla(270, 80%, 55%, 0.2) 0%, transparent 70%);
+      top: -10px;
+      right: -10px;
+    }
+    .bg-glow-2 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, hsla(190, 95%, 50%, 0.15) 0%, transparent 70%);
+      bottom: -10px;
+      left: -10px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      z-index: 10;
+    }
+
+    .setup-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+
+    .setup-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .setup-title {
+      font-size: 1.6rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #ffffff 40%, hsl(210, 40%, 80%) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .setup-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    /* Section Headings */
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 24px 0 16px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title span {
+      background: var(--primary-glow);
+      width: 6px;
+      height: 14px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* Responsive grid layout inside sections */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 480px) {
+      .grid-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Form Fields */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      background: hsla(230, 25%, 8%, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: #fff;
+      font-family: var(--font-family);
+      font-size: 0.9rem;
+      outline: none;
+      transition: var(--transition-smooth);
+    }
+
+    .form-control:focus {
+      border-color: hsl(270, 80%, 55%);
+      box-shadow: 0 0 0 3px hsla(270, 80%, 55%, 0.15);
+    }
+
+    /* Alert Message */
+    .alert {
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+      line-height: 1.4;
+      display: none;
+    }
+    .alert.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: var(--color-error);
+    }
+    .alert.info {
+      display: block;
+      background: rgba(14, 165, 233, 0.1);
+      border: 1px solid rgba(14, 165, 233, 0.25);
+      color: var(--color-info);
+    }
+
+    .error-list {
+      margin-top: 6px;
+      padding-left: 18px;
+    }
+
+    /* Button and Loader */
+    .btn-container {
+      margin-top: 30px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: var(--primary-glow);
+      color: #fff;
+      font-family: var(--font-family);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: var(--transition-smooth);
+    }
+
+    .submit-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      animation: rotate 2s linear infinite;
+      width: 20px;
+      height: 20px;
+    }
+    .spinner .path {
+      stroke: #ffffff;
+      stroke-linecap: round;
+      animation: dash 1.5s ease-in-out infinite;
+    }
+    @keyframes rotate { 100% { transform: rotate(360deg); } }
+    @keyframes dash {
+      0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+      50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+      100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+    }
+
+    /* Success state */
+    .success-screen {
+      text-align: center;
+      display: none;
+    }
+    .success-screen.active {
+      display: block;
+    }
+    .success-checkmark {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: block;
+      margin: 0 auto 20px auto;
+      stroke-width: 2.5;
+      stroke: var(--color-success);
+      border: 2.5px solid var(--color-success);
+      padding: 10px;
+    }
+    .welcome-text {
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .success-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+    .continue-btn {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+      border-radius: 10px;
+      font-family: var(--font-family);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .continue-btn:hover {
+      background: rgba(255,255,255,0.03);
+      color: #fff;
+      border-color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div class="container">
+    <!-- Active Onboarding Form Card -->
+    <div class="setup-card" id="form-card">
+      <div class="setup-header">
+        <h1 class="setup-title">Complete Your Profile</h1>
+        <p class="setup-subtitle">Please fill in additional details to complete your first-time login</p>
+      </div>
+
+      <div id="alert-message" class="alert"></div>
+
+      <form id="details-form">
+        <!-- Personal Information -->
+        <h2 class="section-title"><span></span>Personal Information</h2>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="user-name">Full Name</label>
+            <input type="text" id="user-name" class="form-control" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label for="user-designation">Designation</label>
+            <input type="text" id="user-designation" class="form-control" placeholder="Software Engineer" required>
+          </div>
+        </div>
+        <div class="grid grid-2" style="margin-top: 16px;">
+          <div class="form-group">
+            <label for="user-address">Permanent Address</label>
+            <input type="text" id="user-address" class="form-control" placeholder="123 Main St, City" required>
+          </div>
+          <div class="form-group">
+            <label for="user-mobile">Mobile Number</label>
+            <input type="text" id="user-mobile" class="form-control" placeholder="9876543210" required>
+          </div>
+        </div>
+
+        <!-- Bank Information -->
+        <h2 class="section-title"><span></span>Bank Information</h2>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label for="bank-name">Bank Name</label>
+            <input type="text" id="bank-name" class="form-control" placeholder="State Bank of India" required>
+          </div>
+          <div class="form-group">
+            <label for="bank-address">Bank Address</label>
+            <input type="text" id="bank-address" class="form-control" placeholder="Main Branch, MG Road" required>
+          </div>
+        </div>
+        <div class="grid grid-2" style="margin-top: 16px;">
+          <div class="form-group">
+            <label for="bank-account">Bank Account Number</label>
+            <input type="text" id="bank-account" class="form-control" placeholder="123456789012" required>
+          </div>
+          <div class="form-group">
+            <label for="bank-ifsc">IFSC Code</label>
+            <input type="text" id="bank-ifsc" class="form-control" placeholder="SBIN0001234" required>
+          </div>
+        </div>
+
+        <!-- Identity Information -->
+        <h2 class="section-title"><span></span>Identity Information</h2>
+        <div class="grid">
+          <div class="form-group">
+            <label for="user-aadhar">Aadhar Number (12 Digits)</label>
+            <input type="text" id="user-aadhar" class="form-control" placeholder="123456789012" required>
+          </div>
+        </div>
+
+        <div class="btn-container">
+          <button type="submit" id="submit-btn" class="submit-btn">Submit Profile</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Success Screen (Hidden by default) -->
+    <div class="setup-card success-screen" id="success-card">
+      <svg class="success-checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <h2 class="welcome-text">Profile Completed!</h2>
+      <p class="success-subtitle">Your onboarding information was successfully verified and saved.</p>
+      
+      <button id="continue-btn" class="continue-btn">Go to Login Screen</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Session verification
+      const pendingUser = JSON.parse(sessionStorage.getItem('pending_auth_user'));
+      
+      if (!pendingUser || !pendingUser.id) {
+        // No session exists, redirect to login
+        showAlert('No active session found. Redirecting to login...', 'info');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1500);
+        return;
+      }
+
+      const detailsForm = document.getElementById('details-form');
+      const submitBtn = document.getElementById('submit-btn');
+      const alertMessage = document.getElementById('alert-message');
+      const formCard = document.getElementById('form-card');
+      const successCard = document.getElementById('success-card');
+      const continueBtn = document.getElementById('continue-btn');
+
+      // Form fields
+      const fields = {
+        name: document.getElementById('user-name'),
+        designation: document.getElementById('user-designation'),
+        permanent_address: document.getElementById('user-address'),
+        mobile_number: document.getElementById('user-mobile'),
+        bank_name: document.getElementById('bank-name'),
+        bank_address: document.getElementById('bank-address'),
+        bank_account_number: document.getElementById('bank-account'),
+        ifsc_code: document.getElementById('bank-ifsc'),
+        aadhar_number: document.getElementById('user-aadhar')
+      };
+
+      // Client-side validation Regexes
+      const patterns = {
+        name: /^[A-Za-z ]{2,100}$/,
+        designation: /^[A-Za-z .&-]{2,100}$/,
+        permanent_address: /^[A-Za-z0-9\s,.\-#/()]{5,250}$/,
+        mobile_number: /^[6-9]\d{9}$/,
+        bank_name: /^[A-Za-z0-9\s.,&'-]{2,100}$/,
+        bank_address: /^[A-Za-z0-9\s,.\-#/()]{5,250}$/,
+        bank_account_number: /^\d{9,18}$/,
+        ifsc_code: /^[A-Za-z]{4}0[A-Za-z0-9]{6}$/i,
+        aadhar_number: /^\d{12}$/
+      };
+
+      // Submit Form
+      detailsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Clear alerts
+        alertMessage.style.display = 'none';
+
+        // 2. Validate client-side
+        const errors = [];
+        const payload = {
+          user_id: pendingUser.id
+        };
+
+        // Populate and validate
+        for (const [key, element] of Object.entries(fields)) {
+          const val = element.value.trim();
+          payload[key] = val;
+
+          if (!patterns[key].test(val)) {
+            if (key === 'name') errors.push('Name: Letters and spaces only (2-100 characters).');
+            else if (key === 'designation') errors.push('Designation: Letters, spaces, periods, ampersands, or hyphens (2-100 characters).');
+            else if (key === 'permanent_address') errors.push('Address: Invalid symbols or incorrect length (5-250 characters).');
+            else if (key === 'mobile_number') errors.push('Mobile: Must be a valid 10-digit Indian number.');
+            else if (key === 'bank_name') errors.push('Bank Name: Alphanumeric and common symbols (2-100 characters).');
+            else if (key === 'bank_address') errors.push('Bank Address: Invalid symbols or incorrect length (5-250 characters).');
+            else if (key === 'bank_account_number') errors.push('Bank Account: Must be between 9 and 18 digits.');
+            else if (key === 'ifsc_code') errors.push('IFSC Code: Standard Indian format required (e.g. SBIN0001234).');
+            else if (key === 'aadhar_number') errors.push('Aadhar: Must be exactly 12 digits.');
+          }
+        }
+
+        if (errors.length > 0) {
+          showErrors(errors);
+          return;
+        }
+
+        // 3. Post to API
+        setLoading(true);
+
+        try {
+          const res = await fetch('/api/user-details', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await res.json();
+
+          if (!res.ok) {
+            // Check if server validation errors are returned
+            if (result.errors && Array.isArray(result.errors)) {
+              throw new Error(result.errors.join('<br>'));
+            }
+            throw new Error(result.message || 'Failed to submit profile details.');
+          }
+
+          // 4. Success: transition to completed state
+          sessionStorage.removeItem('pending_auth_user'); // Clean up session
+          
+          formCard.style.display = 'none';
+          successCard.classList.add('active');
+
+        } catch (err) {
+          setLoading(false);
+          alertMessage.innerHTML = `<strong>Error saving profile:</strong><br>${err.message}`;
+          alertMessage.className = 'alert error';
+          alertMessage.style.display = 'block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      // Redirect button click
+      continueBtn.addEventListener('click', () => {
+        window.location.href = '/login';
+      });
+
+      function setLoading(isLoading) {
+        if (isLoading) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = 'Submitting...';
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Submit Profile';
+        }
+      }
+
+      function showErrors(errorsList) {
+        alertMessage.innerHTML = `
+          <strong>Validation Errors:</strong>
+          <ul class="error-list">
+            ${errorsList.map(err => `<li>${err}</li>`).join('')}
+          </ul>
+        `;
+        alertMessage.className = 'alert error';
+        alertMessage.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function showAlert(msg, type) {
+        alertMessage.textContent = msg;
+        alertMessage.className = `alert ${type}`;
+        alertMessage.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  </script>
+</body>
+</html>

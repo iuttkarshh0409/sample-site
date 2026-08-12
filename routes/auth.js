@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('../services/userService');
+const userDetailsService = require('../services/userDetailsService');
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -12,6 +13,7 @@ router.post('/login', async (req, res) => {
   if (!email || typeof email !== 'string') {
     return res.status(400).json({
       status: 'error',
+      success: false,
       message: 'Email address is required.'
     });
   }
@@ -21,6 +23,7 @@ router.post('/login', async (req, res) => {
   if (!EMAIL_REGEX.test(trimmedEmail)) {
     return res.status(400).json({
       status: 'error',
+      success: false,
       message: 'Please enter a valid email address.'
     });
   }
@@ -30,12 +33,19 @@ router.post('/login', async (req, res) => {
     const existingUser = await userService.getUserByEmail(trimmedEmail);
 
     if (existingUser) {
+      // Check if user has completed their profile details
+      const details = await userDetailsService.getUserDetailsByUserId(existingUser.id);
+      const isProfileComplete = !!details;
+
       // 3. User exists: Log them in
       return res.status(200).json({
         status: 'success',
+        success: true,
         action: 'login',
         message: 'Welcome back! Logged in successfully.',
-        user: existingUser
+        user: existingUser,
+        isNewUser: false,
+        profileComplete: isProfileComplete
       });
     }
 
@@ -46,20 +56,29 @@ router.post('/login', async (req, res) => {
 
       return res.status(201).json({
         status: 'success',
+        success: true,
         action: 'signup',
         message: 'Account created! Logged in successfully.',
-        user: newUser || { id: newUserId, email: trimmedEmail, created_at: new Date().toISOString() }
+        user: newUser || { id: newUserId, email: trimmedEmail, created_at: new Date().toISOString() },
+        isNewUser: true,
+        profileComplete: false
       });
     } catch (insertErr) {
-      // Handle potential concurrent signup race conditions
+      // Handle concurrent signup race conditions
       if (insertErr.message.includes('UNIQUE constraint failed')) {
         const retryUser = await userService.getUserByEmail(trimmedEmail);
         if (retryUser) {
+          const details = await userDetailsService.getUserDetailsByUserId(retryUser.id);
+          const isProfileComplete = !!details;
+
           return res.status(200).json({
             status: 'success',
+            success: true,
             action: 'login',
             message: 'Welcome back! Logged in successfully.',
-            user: retryUser
+            user: retryUser,
+            isNewUser: false,
+            profileComplete: isProfileComplete
           });
         }
       }
@@ -69,6 +88,7 @@ router.post('/login', async (req, res) => {
     console.error('Authentication transaction error:', err.message);
     return res.status(500).json({
       status: 'error',
+      success: false,
       message: 'Internal server error during authentication.'
     });
   }

@@ -14,6 +14,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Mount API routers
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/user-details', require('./routes/userDetails'));
 
 // Page Routing
 app.get('/login', (req, res) => {
@@ -22,6 +23,14 @@ app.get('/login', (req, res) => {
 
 app.get('/users', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'users.html'));
+});
+
+app.get('/user-details', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'user-details.html'));
+});
+
+app.get('/profile/setup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'profile-setup.html'));
 });
 
 // Default redirection to /login

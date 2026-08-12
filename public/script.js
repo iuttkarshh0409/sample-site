@@ -54,11 +54,20 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(data.message || 'Authentication failed. Please try again.');
       }
 
-      // 4. Success: Transition to logged-in state screen
+      // 4. Check if profile details need setup, redirect or transition accordingly
       setTimeout(() => {
         setLoading(false);
-        showAuthenticatedState(data);
-      }, 800); // Small delay for visual fluid animation
+        if (data.profileComplete) {
+          showAuthenticatedState(data);
+        } else {
+          // Clear any old details first
+          sessionStorage.removeItem('pending_auth_user');
+          // Store pending auth user (id, email) in session storage
+          sessionStorage.setItem('pending_auth_user', JSON.stringify(data.user));
+          // Redirect to profile setup page
+          window.location.href = '/profile/setup';
+        }
+      }, 850); // Small delay for visual fluid feedback
 
     } catch (err) {
       setLoading(false);
